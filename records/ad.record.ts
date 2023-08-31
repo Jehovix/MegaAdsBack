@@ -2,7 +2,6 @@ import {AdEntity, SimpleAdEntity} from "../types/ad/ad-entity";
 import {ValidationError} from "../utils/errors";
 import {pool} from "../utils/db";
 import {FieldPacket} from "mysql2";
-import {randomUUID} from "crypto";
 import {v4 as uuid} from "uuid";
 
 type AdRecordResults = [AdEntity[], FieldPacket[]];
@@ -60,12 +59,8 @@ export class AdRecord implements AdEntity {
         }) as AdRecordResults;
 
         return results.map(result => {
-            const {
-                id, lat, lon,
-            } = result;
-            return {
-                id, lat, lon,
-            }
+            const {id, lat, lon} = result;
+            return {id, lat, lon}
         });
     }
     async insert(): Promise<void> {
