@@ -1,7 +1,9 @@
-import {AdEntity} from "../types/ad/ad-entity";
+import {AdEntity, SimpleAdEntity} from "../types/ad/ad-entity";
 import {ValidationError} from "../utils/errors";
 import {pool} from "../utils/db";
 import {FieldPacket} from "mysql2";
+import {randomUUID} from "crypto";
+import {v4 as uuid} from "uuid";
 
 type AdRecordResults = [AdEntity[], FieldPacket[]];
 
@@ -44,6 +46,19 @@ export class AdRecord implements AdEntity {
         this.lon = obj.lon;
     }
 
+    async insert(): Promise<string> {
+        if(!this.id) {
+            this.id = uuid()
+        }
+
+        await pool.execute("INSERT INTO `ads`(`id`,`name`) VALUES(:id, :name)", {
+            id: this.id,
+            name: this.name,
+        });
+
+        return this.id;
+    }
+
     static async getOne(id: string): Promise<AdRecord | null> {
         const [results] = await pool.execute("SELECT * FROM `ads` WHERE id = :id", {
             id,
@@ -52,4 +67,18 @@ export class AdRecord implements AdEntity {
         return results.length === 0 ? null : new AdRecord(results[0]);
     }
 
+    static async findAll(name: string): Promise<SimpleAdEntity[]> {
+        const [results] = await pool.execute("SELECT * FROM `ads` WHERE `name` LIKE :search",{
+            search: `%${name}%`,
+        }) as AdRecordResults;
+
+        return results.map(result => {
+            const {
+                id, lat, lon,
+            } = result;
+            return {
+                id, lat, lon,
+            }
+        });
+    }
 }
