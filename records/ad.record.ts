@@ -46,19 +46,6 @@ export class AdRecord implements AdEntity {
         this.lon = obj.lon;
     }
 
-    async insert(): Promise<string> {
-        if(!this.id) {
-            this.id = uuid()
-        }
-
-        await pool.execute("INSERT INTO `ads`(`id`,`name`) VALUES(:id, :name)", {
-            id: this.id,
-            name: this.name,
-        });
-
-        return this.id;
-    }
-
     static async getOne(id: string): Promise<AdRecord | null> {
         const [results] = await pool.execute("SELECT * FROM `ads` WHERE id = :id", {
             id,
@@ -80,5 +67,14 @@ export class AdRecord implements AdEntity {
                 id, lat, lon,
             }
         });
+    }
+    async insert(): Promise<void> {
+        if(!this.id) {
+            this.id = uuid()
+        } else {
+            throw new Error('Cannot insert something that is already inserted!');
+        }
+
+        await pool.execute("INSERT INTO `ads`(`id`,`name`, `description`, `price`, `url`, `lat`, `lon`) VALUES(:id, :name, :description, :price, :url, :lat, :lon)", this);
     }
 }
